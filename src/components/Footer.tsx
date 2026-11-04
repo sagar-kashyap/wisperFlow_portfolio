@@ -5,6 +5,11 @@ export default function Footer() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const GITHUB_URL = process.env.NEXT_PUBLIC_GITHUB_URL || 'https://github.com/sagar-kashyap';
+  const LINKEDIN_URL = process.env.NEXT_PUBLIC_LINKEDIN_URL || 'https://www.linkedin.com/in/sagar-kashyap';
+  const PACKAGEPAL_URL = process.env.NEXT_PUBLIC_PACKAGEPAL_URL || 'https://packagepal.dev/';
+  const AIRBNB_BLOG_URL = process.env.NEXT_PUBLIC_AIRBNB_BLOG_URL || 'https://airbnb-blog.vercel.app/';
+
   return (
     <footer className="site-footer-main">
       <div className="footer-top-grid">
@@ -49,7 +54,7 @@ export default function Footer() {
           <ul className="footer-links-list">
             <li className="footer-link-item">
               <a
-                href="https://packagepal.dev/"
+                href={PACKAGEPAL_URL}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -61,7 +66,7 @@ export default function Footer() {
             </li>
             <li className="footer-link-item">
               <a
-                href="https://airbnb-blog.vercel.app/"
+                href={AIRBNB_BLOG_URL}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -70,7 +75,7 @@ export default function Footer() {
             </li>
             <li className="footer-link-item">
               <a
-                href="https://github.com/sagar-kashyap"
+                href={GITHUB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -79,7 +84,7 @@ export default function Footer() {
             </li>
             <li className="footer-link-item">
               <a
-                href="https://www.linkedin.com/in/sagar-kashyap"
+                href={LINKEDIN_URL}
                 target="_blank"
                 rel="noopener noreferrer"
               >

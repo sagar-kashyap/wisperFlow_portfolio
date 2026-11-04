@@ -12,7 +12,10 @@ export default function ContactSection() {
   const cardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
 
-  const EMAIL = 'sagarkashyapdiyavr@gmail.com';
+  const EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'sagarkashyapdiyavr@gmail.com';
+  const GITHUB_URL = process.env.NEXT_PUBLIC_GITHUB_URL || 'https://github.com/sagar-kashyap';
+  const LINKEDIN_URL = process.env.NEXT_PUBLIC_LINKEDIN_URL || 'https://www.linkedin.com/in/sagar-kashyap';
+  const AIRBNB_BLOG_URL = process.env.NEXT_PUBLIC_AIRBNB_BLOG_URL || 'https://airbnb-blog.vercel.app/';
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -139,7 +142,7 @@ export default function ContactSection() {
           <div className="contact-channels-grid">
             {/* GitHub */}
             <a
-              href="https://github.com/sagar-kashyap"
+              href={GITHUB_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="contact-channel-card"
@@ -155,7 +158,7 @@ export default function ContactSection() {
 
             {/* LinkedIn */}
             <a
-              href="https://www.linkedin.com/in/sagar-kashyap"
+              href={LINKEDIN_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="contact-channel-card"
@@ -171,7 +174,7 @@ export default function ContactSection() {
 
             {/* Airbnb Host Blog */}
             <a
-              href="https://airbnb-blog.vercel.app/"
+              href={AIRBNB_BLOG_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="contact-channel-card"
