@@ -11,11 +11,13 @@ import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
 
 const CustomCursor = dynamic(() => import('@/components/CustomCursor'), { ssr: false });
+const ClickAnimation = dynamic(() => import('@/components/ClickAnimation'), { ssr: false });
 
 export default function Home() {
   return (
     <main className="portfolio-page">
       <CustomCursor />
+      <ClickAnimation />
       <Header />
       <HeroSection />
       <ExperienceSection />
