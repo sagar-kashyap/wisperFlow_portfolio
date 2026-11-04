@@ -3,22 +3,6 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 
-// Helper to generate a logarithmic / Archimedean spiral SVG path
-function generateSpiralPath(turns = 2.4, maxRadius = 30, points = 36, clockwise = true): string {
-  let d = '';
-  const maxTheta = turns * 2 * Math.PI;
-  for (let i = 0; i <= points; i++) {
-    const t = i / points;
-    // Ease radius slightly so the center starts tight and unfurls
-    const r = Math.pow(t, 1.1) * maxRadius;
-    const theta = (clockwise ? 1 : -1) * t * maxTheta;
-    const x = (r * Math.cos(theta)).toFixed(2);
-    const y = (r * Math.sin(theta)).toFixed(2);
-    d += i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`;
-  }
-  return d;
-}
-
 // Check whether target or any ancestor is an interactive feature / button
 function isInteractiveElement(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
@@ -66,8 +50,6 @@ export default function ClickAnimation() {
     const container = containerRef.current;
     if (!container) return;
 
-    let clickCount = 0;
-
     const onPointerDown = (e: PointerEvent) => {
       // Only left clicks or touch taps
       if (e.button !== 0) return;
@@ -75,15 +57,8 @@ export default function ClickAnimation() {
       // Ignore if user clicked on any button, link, or interactive feature
       if (isInteractiveElement(e.target)) return;
 
-      clickCount++;
       const x = e.clientX;
       const y = e.clientY;
-
-      // Palette alternating between signature terracotta red and ink charcoal
-      const isAccent = clickCount % 3 === 0;
-      const mainColor = isAccent ? '#c0392b' : '#1e1c1a';
-      const secondaryColor = isAccent ? '#e74c3c' : '#6b6760';
-      const clockwise = clickCount % 2 === 0;
 
       // Create an isolated wrapper for this click instance
       const wrap = document.createElement('div');
@@ -91,57 +66,55 @@ export default function ClickAnimation() {
       wrap.style.left = `${x}px`;
       wrap.style.top = `${y}px`;
       wrap.style.transform = 'translate(-50%, -50%)';
-      wrap.style.width = '120px';
-      wrap.style.height = '120px';
+      wrap.style.width = '140px';
+      wrap.style.height = '140px';
 
-      // SVG with spiral, ripple circle, central dot, and popping satellite particles
-      const spiralPath = generateSpiralPath(2.4, 32, 40, clockwise);
-      const satelliteCount = 6;
-      let satellitesSvg = '';
+      // Launch trajectory: rocket naturally points ~45deg up-right
+      // Slight natural variation between -35deg and -65deg
+      const angleDeg = -48 + (Math.random() * 20 - 10);
+      const angleRad = (angleDeg * Math.PI) / 180;
+      const launchDist = 95 + Math.random() * 25;
+      const tx = Math.cos(angleRad) * launchDist;
+      const ty = Math.sin(angleRad) * launchDist;
 
-      for (let i = 0; i < satelliteCount; i++) {
-        const angle = (i / satelliteCount) * Math.PI * 2 + (Math.random() * 0.4 - 0.2);
-        const dist = 26 + Math.random() * 16;
-        const sx = Math.cos(angle) * dist;
-        const sy = Math.sin(angle) * dist;
-        const r = 1.8 + Math.random() * 1.5;
-        satellitesSvg += `<circle class="satellite-dot" cx="60" cy="60" data-tx="${sx}" data-ty="${sy}" r="${r}" fill="${i % 2 === 0 ? mainColor : secondaryColor}" />`;
+      // Exhaust colors for launch smoke and sparks
+      const exhaustColors = ['#c0392b', '#e67e22', '#f39c12', '#6b6760', '#e8e1d4'];
+
+      let exhaustDots = '';
+      for (let i = 0; i < 6; i++) {
+        // opposite of launch direction with spread
+        const backAngle = angleRad + Math.PI + (Math.random() * 0.8 - 0.4);
+        const dist = 14 + Math.random() * 20;
+        const ex = Math.cos(backAngle) * dist;
+        const ey = Math.sin(backAngle) * dist;
+        const size = 3 + Math.random() * 3;
+        const color = exhaustColors[i % exhaustColors.length];
+        exhaustDots += `<span class="exhaust-dot" style="position: absolute; left: 70px; top: 70px; width: ${size}px; height: ${size}px; border-radius: 9999px; background-color: ${color}; transform: translate(-50%, -50%);" data-tx="${ex}" data-ty="${ey}"></span>`;
       }
 
       wrap.innerHTML = `
-        <svg viewBox="0 0 120 120" class="w-full h-full overflow-visible">
-          <!-- Expanding ripple ring -->
-          <circle class="ripple-ring" cx="60" cy="60" r="8" fill="none" stroke="${mainColor}" stroke-width="1.2" opacity="0.6" />
-          
-          <!-- Spiral group centered at (60, 60) -->
-          <g class="spiral-group" transform="translate(60, 60)">
-            <path class="spiral-path" d="${spiralPath}" fill="none" stroke="${mainColor}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-          </g>
+        <!-- Launch shockwave ring -->
+        <span class="launch-ring" style="position: absolute; left: 70px; top: 70px; width: 16px; height: 16px; border: 1.5px solid #c0392b; border-radius: 9999px; transform: translate(-50%, -50%); opacity: 0.7;"></span>
 
-          <!-- Core pop dot -->
-          <circle class="center-dot" cx="60" cy="60" r="4" fill="${mainColor}" />
+        <!-- Exhaust smoke/spark particles -->
+        ${exhaustDots}
 
-          <!-- Radiating satellite dots -->
-          ${satellitesSvg}
-        </svg>
+        <!-- Launching Rocket Emoji -->
+        <div class="rocket-emoji" style="position: absolute; left: 70px; top: 70px; font-size: 28px; line-height: 1; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.18));">
+          🚀
+        </div>
       `;
 
       container.appendChild(wrap);
 
-      const spiralPathEl = wrap.querySelector<SVGPathElement>('.spiral-path');
-      const spiralGroup = wrap.querySelector<SVGGElement>('.spiral-group');
-      const centerDot = wrap.querySelector<SVGCircleElement>('.center-dot');
-      const rippleRing = wrap.querySelector<SVGCircleElement>('.ripple-ring');
-      const satellites = wrap.querySelectorAll<SVGCircleElement>('.satellite-dot');
+      const rocket = wrap.querySelector<HTMLElement>('.rocket-emoji');
+      const ring = wrap.querySelector<HTMLElement>('.launch-ring');
+      const exhaust = wrap.querySelectorAll<HTMLElement>('.exhaust-dot');
 
-      if (!spiralPathEl || !spiralGroup || !centerDot || !rippleRing) {
+      if (!rocket || !ring) {
         wrap.remove();
         return;
       }
-
-      const length = spiralPathEl.getTotalLength();
-      spiralPathEl.style.strokeDasharray = `${length}`;
-      spiralPathEl.style.strokeDashoffset = `${length}`;
 
       const tl = gsap.timeline({
         onComplete: () => {
@@ -149,81 +122,69 @@ export default function ClickAnimation() {
         },
       });
 
-      // 1. Center dot pops out with spring bounce, then dissolves
+      // 1. Shockwave ring expands and dissolves
       tl.fromTo(
-        centerDot,
-        { scale: 0, opacity: 0, transformOrigin: 'center' },
-        { scale: 1.3, opacity: 1, duration: 0.22, ease: 'back.out(2.5)' },
-        0
-      );
-      tl.to(
-        centerDot,
-        { scale: 0, opacity: 0, duration: 0.35, ease: 'power2.in' },
-        0.35
-      );
-
-      // 2. Unfurl the spiral stroke outward while smoothly rotating
-      tl.to(
-        spiralPathEl,
-        {
-          strokeDashoffset: 0,
-          duration: 0.55,
-          ease: 'power2.out',
-        },
-        0.05
-      );
-      tl.fromTo(
-        spiralGroup,
-        { rotation: clockwise ? -45 : 45, transformOrigin: 'center' },
-        {
-          rotation: clockwise ? 180 : -180,
-          duration: 0.8,
-          ease: 'power1.out',
-        },
-        0.05
-      );
-      tl.to(
-        spiralPathEl,
-        {
-          opacity: 0,
-          duration: 0.3,
-          ease: 'power2.in',
-        },
-        0.55
-      );
-
-      // 3. Delicate ripple ring expands outward and dissolves into the paper
-      tl.fromTo(
-        rippleRing,
-        { attr: { r: 6 }, opacity: 0.7, strokeWidth: 1.5 },
-        {
-          attr: { r: 38 },
-          opacity: 0,
-          strokeWidth: 0.5,
-          duration: 0.65,
-          ease: 'power2.out',
-        },
+        ring,
+        { scale: 0.4, opacity: 0.8 },
+        { scale: 3.2, opacity: 0, duration: 0.45, ease: 'power2.out' },
         0
       );
 
-      // 4. Satellite dots burst outward in varied directions and dissipate
-      satellites.forEach((dot, idx) => {
-        const tx = parseFloat(dot.getAttribute('data-tx') || '0');
-        const ty = parseFloat(dot.getAttribute('data-ty') || '0');
+      // 2. Exhaust particles burst out from behind the rocket thruster
+      exhaust.forEach((dot, idx) => {
+        const dtx = parseFloat(dot.getAttribute('data-tx') || '0');
+        const dty = parseFloat(dot.getAttribute('data-ty') || '0');
         tl.fromTo(
           dot,
-          { x: 0, y: 0, opacity: 1, scale: 0.4 },
+          { scale: 0.4, opacity: 0.9 },
           {
-            x: tx,
-            y: ty,
+            x: dtx,
+            y: dty,
+            scale: 1.2,
             opacity: 0,
-            scale: 1,
-            duration: 0.5 + idx * 0.04,
-            ease: 'power3.out',
+            duration: 0.4 + idx * 0.03,
+            ease: 'power2.out',
           },
-          0.04
+          0.02
         );
       });
+
+      // 3. Rocket pops in with punch, then blasts off along the trajectory
+      tl.fromTo(
+        rocket,
+        { scale: 0, opacity: 0, x: 0, y: 0, rotate: angleDeg + 45 },
+        {
+          scale: 1.2,
+          opacity: 1,
+          duration: 0.16,
+          ease: 'back.out(2.2)',
+        },
+        0
+      );
+
+      // Blast off acceleration
+      tl.to(
+        rocket,
+        {
+          x: tx,
+          y: ty,
+          scale: 0.85,
+          duration: 0.52,
+          ease: 'power2.in',
+        },
+        0.16
+      );
+
+      // Fade out at end of flight
+      tl.to(
+        rocket,
+        {
+          opacity: 0,
+          duration: 0.18,
+          ease: 'power1.out',
+        },
+        0.5
+      );
     };
 
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
